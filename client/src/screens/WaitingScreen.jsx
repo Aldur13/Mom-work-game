@@ -1,10 +1,19 @@
+import { useState } from 'react';
 import socket from '../socket';
 
 export default function WaitingScreen({ roomCode, players, readyCount, isHost, gameError, onClearError }) {
+  const [copied, setCopied] = useState(false);
   const total = players.length;
   const minPlayers = 3;
   const allReady = readyCount === total && total >= minPlayers;
   const canStart = isHost && allReady;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(roomCode).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   const handleStart = () => {
     onClearError();
@@ -15,7 +24,12 @@ export default function WaitingScreen({ roomCode, players, readyCount, isHost, g
     <div className="screen">
       <div className="room-code-badge">
         <div className="label">Share this code to join</div>
-        <div className="code">{roomCode}</div>
+        <div className="copy-row">
+          <div className="code">{roomCode}</div>
+          <button className={`copy-btn${copied ? ' copied' : ''}`} onClick={handleCopy}>
+            {copied ? '✓ Copied!' : 'Copy'}
+          </button>
+        </div>
       </div>
 
       <div className="info-row">
@@ -28,7 +42,9 @@ export default function WaitingScreen({ roomCode, players, readyCount, isHost, g
       <div className="scroll-list">
         {players.map(p => (
           <div key={p.id} className="player-row">
-            <div className="player-avatar">{p.name[0].toUpperCase()}</div>
+            <div className="player-avatar" style={{ background: p.color || 'var(--primary)' }}>
+              {p.name[0].toUpperCase()}
+            </div>
             <span className="player-name">{p.name}</span>
             {p.isHost && <span className="player-badge host">Host</span>}
             <span className={`player-badge ${p.profileReady ? 'ready' : ''}`}>

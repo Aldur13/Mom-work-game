@@ -1,8 +1,16 @@
 const DEFAULT_QUESTIONS = require('./questions');
 const DEFAULT_ANSWERS = require('./defaultAnswers');
 
-const TIME_LIMIT_MS = 20000;
 const DEFAULT_TOTAL_ROUNDS = 20;
+const DEFAULT_TIME_LIMIT = 20000;
+
+const PLAYER_COLORS = [
+  '#e91e8c', '#00d4aa', '#7c4dff', '#ff6b35',
+  '#ffd100', '#00b4d8', '#a8e063', '#f72585',
+  '#3a86ff', '#fb5607', '#8338ec', '#06d6a0',
+  '#ef233c', '#4cc9f0', '#c77dff', '#4361ee',
+  '#43aa8b', '#f8961e'
+];
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -32,12 +40,15 @@ class GameRoom {
     this.lastActivity = Date.now();
     this.questions = [...DEFAULT_QUESTIONS];
     this.totalRounds = DEFAULT_TOTAL_ROUNDS;
+    this.timeLimit = DEFAULT_TIME_LIMIT;
     this.usingCustomQuestions = false;
+    this._colorIndex = 0;
 
-    this.players.set(hostId, { name: hostName, answers: null, score: 0 });
+    const hostColor = PLAYER_COLORS[this._colorIndex++ % PLAYER_COLORS.length];
+    this.players.set(hostId, { name: hostName, answers: null, score: 0, color: hostColor });
   }
 
-  configure({ questions, totalRounds, usingCustomQuestions }) {
+  configure({ questions, totalRounds, usingCustomQuestions, timeLimit }) {
     if (this.state !== 'lobby') return { error: 'Cannot configure after game has started' };
 
     if (typeof usingCustomQuestions === 'boolean') {
@@ -55,6 +66,10 @@ class GameRoom {
       this.totalRounds = Math.max(5, Math.min(40, Math.round(totalRounds)));
     }
 
+    if (typeof timeLimit === 'number' && !isNaN(timeLimit)) {
+      this.timeLimit = Math.max(5000, Math.min(60000, timeLimit));
+    }
+
     // Reset all profiles since questions may have changed
     for (const player of this.players.values()) {
       player.answers = null;
@@ -66,7 +81,8 @@ class GameRoom {
   addPlayer(socketId, name) {
     if (this.state !== 'lobby') return { error: 'Game already started' };
     if (this.players.size >= 18) return { error: 'Room is full (max 18)' };
-    this.players.set(socketId, { name, answers: null, score: 0 });
+    const color = PLAYER_COLORS[this._colorIndex++ % PLAYER_COLORS.length];
+    this.players.set(socketId, { name, answers: null, score: 0, color });
     return { ok: true };
   }
 
@@ -82,6 +98,7 @@ class GameRoom {
     const players = Array.from(this.players.entries()).map(([id, p]) => ({
       id,
       name: p.name,
+      color: p.color,
       profileReady: p.answers !== null,
       isHost: id === this.hostId
     }));
@@ -134,10 +151,10 @@ class GameRoom {
     if (roundType === 'player-guess') {
       const otherPlayers = [...this.players.entries()]
         .filter(([id]) => id !== subjectId)
-        .map(([id, p]) => ({ id, text: p.name }));
+        .map(([id, p]) => ({ id, text: p.name, color: p.color }));
 
       const decoys = shuffle(otherPlayers).slice(0, 3);
-      const correctOption = { id: subjectId, text: subject.name };
+      const correctOption = { id: subjectId, text: subject.name, color: subject.color };
       const options = shuffle([correctOption, ...decoys]);
 
       this.currentRound = {
@@ -158,7 +175,7 @@ class GameRoom {
         subjectName: subject.name,
         subjectId,
         correctAnswer,
-        options: options.map(o => ({ id: o.id, text: o.text })),
+        options: options.map(o => ({ id: o.id, text: o.text, color: o.color })),
         roundNum: this.currentRoundIndex + 1,
         totalRounds: this.roundPool.length,
         totalPlayers: this.players.size,
@@ -251,7 +268,7 @@ class GameRoom {
       const isCorrect = guess.optionId === round.correctOptionId;
       let points = 0;
       if (isCorrect) {
-        const ratio = Math.min(guess.timeTaken / TIME_LIMIT_MS, 1);
+        const ratio = Math.min(guess.timeTaken / this.timeLimit, 1);
         points = Math.max(500, Math.round(1000 * (1 - ratio * 0.5)));
       } else {
         wrongGuessCount++;
@@ -261,6 +278,7 @@ class GameRoom {
       results.push({
         playerId: socketId,
         playerName: player.name,
+        playerColor: player.color,
         optionId: guess.optionId,
         isCorrect,
         points,
@@ -268,7 +286,7 @@ class GameRoom {
       });
     }
 
-    const subjectBonus = wrongGuessCount * 25;
+    const subjectBonus = wrongGuessCount * 75;
     const subject = this.players.get(round.subjectId);
     if (subject) subject.score += subjectBonus;
 
@@ -287,7 +305,7 @@ class GameRoom {
 
   getLeaderboard() {
     return [...this.players.entries()]
-      .map(([id, p]) => ({ id, name: p.name, score: p.score, isHost: id === this.hostId }))
+      .map(([id, p]) => ({ id, name: p.name, score: p.score, color: p.color, isHost: id === this.hostId }))
       .sort((a, b) => b.score - a.score);
   }
 

@@ -25,6 +25,24 @@ export default function FinalScreen({ finalScores, myId }) {
         {podiumOrder.map((player, i) =>
           player ? (
             <div key={player.id} className="podium-place">
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  background: player.color || 'var(--primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.1rem',
+                  fontWeight: 900,
+                  color: '#0a0a1a',
+                  marginBottom: 4,
+                  border: '2px solid rgba(255,255,255,0.2)'
+                }}
+              >
+                {player.name[0].toUpperCase()}
+              </div>
               <div className="podium-name">{player.name}</div>
               <div className="podium-score">{player.score.toLocaleString()}</div>
               <div className={`podium-block ${podiumClasses[i]}`}>{podiumEmojis[i]}</div>
@@ -39,6 +57,23 @@ export default function FinalScreen({ finalScores, myId }) {
           <div className="score-rows">
             {rest.map((p, idx) => (
               <div key={p.id} className={`score-row${p.id === myId ? ' me' : ''}`}>
+                <span
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    background: p.color || 'var(--primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    color: '#0a0a1a',
+                    flexShrink: 0
+                  }}
+                >
+                  {p.name[0].toUpperCase()}
+                </span>
                 <span className="rank">#{idx + 4}</span>
                 <span className="score-name">{p.name}{p.id === myId ? ' (you)' : ''}</span>
                 <span className="score-pts">{p.score.toLocaleString()}</span>

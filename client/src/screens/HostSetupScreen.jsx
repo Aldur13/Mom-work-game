@@ -2,20 +2,37 @@ import { useState } from 'react';
 import socket from '../socket';
 import DEFAULT_QUESTIONS from '../questions';
 
+const TIME_OPTIONS = [
+  { label: '10s', value: 10 },
+  { label: '15s', value: 15 },
+  { label: '20s', value: 20 },
+  { label: '30s', value: 30 },
+];
+
 export default function HostSetupScreen({ roomCode, onDone }) {
   const [useCustom, setUseCustom] = useState(false);
   const [customQuestions, setCustomQuestions] = useState(Array(10).fill(''));
   const [roundCount, setRoundCount] = useState(20);
+  const [timePerRound, setTimePerRound] = useState(20);
+  const [copied, setCopied] = useState(false);
 
   const filledCustom = customQuestions.filter(q => q.trim()).length;
   const customValid = !useCustom || filledCustom === 10;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(roomCode).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   const handleContinue = () => {
     const questions = useCustom ? customQuestions.map(q => q.trim()) : null;
     socket.emit('configure-room', {
       usingCustomQuestions: useCustom,
       questions,
-      totalRounds: roundCount
+      totalRounds: roundCount,
+      timeLimit: timePerRound * 1000
     });
     onDone(useCustom ? customQuestions.map(q => q.trim()) : DEFAULT_QUESTIONS);
   };
@@ -24,7 +41,12 @@ export default function HostSetupScreen({ roomCode, onDone }) {
     <div className="screen">
       <div className="room-code-badge">
         <div className="label">Share this code to join</div>
-        <div className="code">{roomCode}</div>
+        <div className="copy-row">
+          <div className="code">{roomCode}</div>
+          <button className={`copy-btn${copied ? ' copied' : ''}`} onClick={handleCopy}>
+            {copied ? '✓ Copied!' : 'Copy'}
+          </button>
+        </div>
       </div>
 
       <div>
@@ -34,7 +56,9 @@ export default function HostSetupScreen({ roomCode, onDone }) {
         </p>
       </div>
 
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+        {/* Questions */}
         <div>
           <p style={{ fontWeight: 600, marginBottom: '8px' }}>Questions</p>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -87,6 +111,7 @@ export default function HostSetupScreen({ roomCode, onDone }) {
           </div>
         )}
 
+        {/* Number of rounds */}
         <div>
           <p style={{ fontWeight: 600, marginBottom: '8px' }}>Number of Rounds</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -104,6 +129,24 @@ export default function HostSetupScreen({ roomCode, onDone }) {
             <span style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>rounds (5–40)</span>
           </div>
         </div>
+
+        {/* Time per round */}
+        <div>
+          <p style={{ fontWeight: 600, marginBottom: '8px' }}>Time per Round</p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {TIME_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                className={`btn ${timePerRound === opt.value ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ flex: 1, fontSize: '0.85rem', padding: '8px' }}
+                onClick={() => setTimePerRound(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
       </div>
 
       <button

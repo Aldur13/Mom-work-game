@@ -20,7 +20,6 @@ const socketToRoom = new Map(); // socketId -> roomCode
 const revealTimers = new Map(); // code -> timeout ref
 
 const PORT = process.env.PORT || 3001;
-const TIME_LIMIT_MS = 20000;
 const LOBBY_TIMEOUT_MS = 60 * 60 * 1000;    // 1 hour
 const FINISHED_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 
@@ -167,7 +166,7 @@ function sendNextQuestion(room, code) {
     roundNum: data.roundNum,
     totalRounds: data.totalRounds,
     totalPlayers: data.totalPlayers,
-    timeLimit: TIME_LIMIT_MS,
+    timeLimit: room.timeLimit,
     roundType: data.roundType,
     ...(data.roundType === 'player-guess' ? { correctAnswer: data.correctAnswer } : {})
   });
@@ -180,7 +179,7 @@ function sendNextQuestion(room, code) {
   const timer = setTimeout(() => {
     revealTimers.delete(code);
     if (room.state === 'playing' && room.currentRound) triggerReveal(room, code);
-  }, TIME_LIMIT_MS + 500);
+  }, room.timeLimit + 500);
   revealTimers.set(code, timer);
 }
 
