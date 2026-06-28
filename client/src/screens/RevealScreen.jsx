@@ -58,11 +58,11 @@ export default function RevealScreen({ revealData, isHost, myId }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '0.8rem',
+                  fontSize: '0.75rem',
                   flexShrink: 0
                 }}
               >
-                {r.playerName[0].toUpperCase()}
+                {r.playerAvatar || r.playerName[0].toUpperCase()}
               </span>
               <span className="guess-name">{r.playerName}{r.playerId === myId ? ' (you)' : ''}</span>
               <span style={{ fontSize: '0.85rem', color: r.isCorrect ? 'var(--success)' : 'var(--danger)' }}>
@@ -92,13 +92,13 @@ export default function RevealScreen({ revealData, isHost, myId }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '0.78rem',
+                  fontSize: '0.7rem',
                   fontWeight: 700,
                   color: '#0a0a1a',
                   flexShrink: 0
                 }}
               >
-                {p.name[0].toUpperCase()}
+                {p.avatar || p.name[0].toUpperCase()}
               </span>
               <span className="score-name">{p.name}{p.id === myId ? ' (you)' : ''}</span>
               <span className="rank" style={{ width: 'auto' }}>

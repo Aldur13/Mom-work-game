@@ -33,14 +33,14 @@ export default function FinalScreen({ finalScores, myId }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1.1rem',
+                  fontSize: '1.2rem',
                   fontWeight: 900,
                   color: '#0a0a1a',
                   marginBottom: 4,
                   border: '2px solid rgba(255,255,255,0.2)'
                 }}
               >
-                {player.name[0].toUpperCase()}
+                {player.avatar || player.name[0].toUpperCase()}
               </div>
               <div className="podium-name">{player.name}</div>
               <div className="podium-score">{player.score.toLocaleString()}</div>
@@ -65,13 +65,13 @@ export default function FinalScreen({ finalScores, myId }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '0.78rem',
+                    fontSize: '0.7rem',
                     fontWeight: 700,
                     color: '#0a0a1a',
                     flexShrink: 0
                   }}
                 >
-                  {p.name[0].toUpperCase()}
+                  {p.avatar || p.name[0].toUpperCase()}
                 </span>
                 <span className="rank">#{idx + 4}</span>
                 <div style={{ flex: 1 }}>

@@ -73,7 +73,7 @@ io.on('connection', (socket) => {
     io.to(upperCode).emit('room-update', room.getRoomUpdate());
   });
 
-  socket.on('submit-profile', ({ answers }) => {
+  socket.on('submit-profile', ({ answers, avatar }) => {
     const code = socketToRoom.get(socket.id);
     const room = rooms.get(code);
     if (!room) return;
@@ -84,7 +84,7 @@ io.on('connection', (socket) => {
         sanitized[key] = answers[key].trim().slice(0, 60);
       }
     }
-    room.submitProfile(socket.id, sanitized);
+    room.submitProfile(socket.id, sanitized, avatar);
     io.to(code).emit('room-update', room.getRoomUpdate());
     socket.emit('profile-accepted');
   });

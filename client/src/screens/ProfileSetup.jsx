@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import socket from '../socket';
 
+const AVATAR_EMOJIS = ['⭐', '🎭', '🎨', '🎪', '🎯', '🎸', '🎬', '🏆', '🎲', '🎮', '🚀', '💎'];
+
 export default function ProfileSetup({ roomCode, questions }) {
   const [answers, setAnswers] = useState(Object.fromEntries(questions.map((_, i) => [`q${i}`, ''])));
   const [submitting, setSubmitting] = useState(false);
+  const [selectedEmoji, setSelectedEmoji] = useState(AVATAR_EMOJIS[0]);
 
   const allFilled = questions.every((_, i) => answers[`q${i}`]?.trim().length > 0);
 
   const handleSubmit = () => {
     if (!allFilled || submitting) return;
     setSubmitting(true);
-    socket.emit('submit-profile', { answers });
+    socket.emit('submit-profile', { answers, avatar: selectedEmoji });
   };
 
   return (
@@ -25,6 +28,35 @@ export default function ProfileSetup({ roomCode, questions }) {
         <p className="subtitle" style={{ marginTop: '4px' }}>
           Answer all {questions.length} questions — your crew will guess your answers!
         </p>
+      </div>
+
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div>
+          <p style={{ fontWeight: 600, marginBottom: '8px', fontSize: '0.95rem' }}>Choose Your Avatar</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+            {AVATAR_EMOJIS.map(emoji => (
+              <button
+                key={emoji}
+                onClick={() => setSelectedEmoji(emoji)}
+                style={{
+                  width: '100%',
+                  aspectRatio: '1',
+                  fontSize: '2rem',
+                  background: selectedEmoji === emoji ? 'var(--primary)' : 'rgba(255,255,255,0.08)',
+                  border: selectedEmoji === emoji ? '2px solid var(--accent)' : '2px solid transparent',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="card">

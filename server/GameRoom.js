@@ -50,6 +50,7 @@ class GameRoom {
       answers: null,
       score: 0,
       color: hostColor,
+      avatar: null,
       streak: 0,
       maxStreak: 0,
       correctGuesses: 0,
@@ -96,6 +97,7 @@ class GameRoom {
       answers: null,
       score: 0,
       color,
+      avatar: null,
       streak: 0,
       maxStreak: 0,
       correctGuesses: 0,
@@ -117,16 +119,18 @@ class GameRoom {
       id,
       name: p.name,
       color: p.color,
+      avatar: p.avatar,
       profileReady: p.answers !== null,
       isHost: id === this.hostId
     }));
     return { players, readyCount: players.filter(p => p.profileReady).length };
   }
 
-  submitProfile(socketId, answers) {
+  submitProfile(socketId, answers, avatar) {
     const player = this.players.get(socketId);
     if (!player) return { error: 'Player not found' };
     player.answers = answers;
+    if (avatar) player.avatar = avatar;
     return { ok: true };
   }
 
@@ -317,6 +321,7 @@ class GameRoom {
         playerId: socketId,
         playerName: player.name,
         playerColor: player.color,
+        playerAvatar: player.avatar,
         optionId: guess.optionId,
         isCorrect,
         points,
@@ -351,6 +356,7 @@ class GameRoom {
         name: p.name,
         score: p.score,
         color: p.color,
+        avatar: p.avatar,
         isHost: id === this.hostId,
         streak: p.streak,
         maxStreak: p.maxStreak,
