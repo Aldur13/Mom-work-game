@@ -22,11 +22,13 @@ export default function App() {
   const [finalScores, setFinalScores] = useState(null);
   const [error, setError] = useState(null);
   const [gameError, setGameError] = useState(null);
+  const [disconnected, setDisconnected] = useState(false);
 
   useEffect(() => {
     socket.connect();
 
-    socket.on('connect', () => setMyId(socket.id));
+    socket.on('connect', () => { setMyId(socket.id); setDisconnected(false); });
+    socket.on('disconnect', () => setDisconnected(true));
 
     socket.on('joined-room', ({ code, isHost: host }) => {
       setRoomCode(code);
@@ -45,6 +47,7 @@ export default function App() {
 
     socket.on('game-started', () => {
       setGameError(null);
+      setScreen('starting');
     });
 
     socket.on('new-question', (data) => {
@@ -79,6 +82,7 @@ export default function App() {
 
     return () => {
       socket.off('connect');
+      socket.off('disconnect');
       socket.off('joined-room');
       socket.off('room-update');
       socket.off('profile-accepted');
@@ -92,6 +96,18 @@ export default function App() {
       socket.off('game-error');
     };
   }, []);
+
+  if (disconnected) return (
+    <div className="screen" style={{ textAlign: 'center' }}>
+      <div className="error-banner">Connection lost — please refresh the page to rejoin.</div>
+    </div>
+  );
+
+  if (screen === 'starting') return (
+    <div className="screen" style={{ textAlign: 'center' }}>
+      <p className="waiting-text">Game is starting...</p>
+    </div>
+  );
 
   if (screen === 'home') return <HomeScreen error={error} onClearError={() => setError(null)} />;
   if (screen === 'profile') return <ProfileSetup roomCode={roomCode} />;

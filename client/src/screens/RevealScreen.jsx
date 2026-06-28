@@ -4,7 +4,7 @@ export default function RevealScreen({ revealData, isHost, myId }) {
   const myResult = revealData.results.find(r => r.playerId === myId);
   const isMySubject = revealData.subjectId === myId;
   const wrongGuesses = revealData.results.filter(r => !r.isCorrect).length;
-  const subjectBonus = wrongGuesses * 25;
+  const subjectBonus = revealData.subjectBonus ?? wrongGuesses * 25;
 
   return (
     <div className="screen">

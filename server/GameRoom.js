@@ -28,6 +28,7 @@ class GameRoom {
     this.roundPool = [];
     this.currentRoundIndex = 0;
     this.currentRound = null;
+    this.lastActivity = Date.now();
 
     this.players.set(hostId, { name: hostName, answers: null, score: 0 });
   }
@@ -136,7 +137,10 @@ class GameRoom {
     if (!this.currentRound || this.state !== 'playing') return { error: 'No active round' };
     if (socketId === this.currentRound.subjectId) return { error: 'Subject cannot guess' };
     if (this.currentRound.guesses.has(socketId)) return { error: 'Already guessed' };
+    const validIds = this.currentRound.options.map(o => o.id);
+    if (!validIds.includes(optionId)) return { error: 'Invalid option' };
 
+    this.lastActivity = Date.now();
     const timeTaken = Date.now() - this.currentRound.questionSentAt;
     this.currentRound.guesses.set(socketId, { optionId, timeTaken });
 
@@ -173,10 +177,10 @@ class GameRoom {
       results.push({ playerId: socketId, playerName: player.name, optionId: guess.optionId, isCorrect, points, totalScore: player.score });
     }
 
+    const subjectBonus = wrongGuessCount * 25;
     const subject = this.players.get(round.subjectId);
     if (subject) {
-      const bonus = wrongGuessCount * 25;
-      subject.score += bonus;
+      subject.score += subjectBonus;
     }
 
     return {
@@ -185,6 +189,7 @@ class GameRoom {
       subjectId: round.subjectId,
       subjectName: round.subjectName,
       question: round.question,
+      subjectBonus,
       results,
       scores: this.getLeaderboard()
     };
