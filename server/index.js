@@ -89,11 +89,11 @@ io.on('connection', (socket) => {
     socket.emit('profile-accepted');
   });
 
-  socket.on('configure-room', ({ questions, totalRounds, usingCustomQuestions }) => {
+  socket.on('configure-room', ({ questions, totalRounds, usingCustomQuestions, roundTypes }) => {
     const code = socketToRoom.get(socket.id);
     const room = rooms.get(code);
     if (!room || socket.id !== room.hostId) return;
-    room.configure({ questions, totalRounds, usingCustomQuestions });
+    room.configure({ questions, totalRounds, usingCustomQuestions, roundTypes });
     io.to(code).emit('room-configured', { questions: room.questions, totalRounds: room.totalRounds });
     io.to(code).emit('room-update', room.getRoomUpdate());
   });

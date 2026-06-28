@@ -15,6 +15,8 @@ export default function HostSetupScreen({ roomCode, onDone }) {
   const [roundCount, setRoundCount] = useState(20);
   const [timePerRound, setTimePerRound] = useState(20);
   const [copied, setCopied] = useState(false);
+  const [enableSpeedRound, setEnableSpeedRound] = useState(false);
+  const [enableDebateRound, setEnableDebateRound] = useState(false);
 
   const filledCustom = customQuestions.filter(q => q.trim()).length;
   const customValid = !useCustom || filledCustom === 10;
@@ -32,7 +34,11 @@ export default function HostSetupScreen({ roomCode, onDone }) {
       usingCustomQuestions: useCustom,
       questions,
       totalRounds: roundCount,
-      timeLimit: timePerRound * 1000
+      timeLimit: timePerRound * 1000,
+      roundTypes: {
+        speedRound: enableSpeedRound,
+        debateRound: enableDebateRound
+      }
     });
     onDone(useCustom ? customQuestions.map(q => q.trim()) : DEFAULT_QUESTIONS);
   };
@@ -144,6 +150,37 @@ export default function HostSetupScreen({ roomCode, onDone }) {
                 {opt.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Custom Round Types */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+          <p style={{ fontWeight: 600, marginBottom: '12px' }}>Special Rounds</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={enableSpeedRound}
+                onChange={(e) => setEnableSpeedRound(e.target.checked)}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+              />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>Speed Rounds</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: '2px' }}>10s timer, 2x streak bonus</div>
+              </div>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={enableDebateRound}
+                onChange={(e) => setEnableDebateRound(e.target.checked)}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+              />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>Debate Rounds</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: '2px' }}>30s, see other guesses before submit</div>
+              </div>
+            </label>
           </div>
         </div>
 

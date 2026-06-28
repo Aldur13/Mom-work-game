@@ -42,6 +42,7 @@ class GameRoom {
     this.totalRounds = DEFAULT_TOTAL_ROUNDS;
     this.timeLimit = DEFAULT_TIME_LIMIT;
     this.usingCustomQuestions = false;
+    this.roundTypes = { speedRound: false, debateRound: false };
     this._colorIndex = 0;
 
     const hostColor = PLAYER_COLORS[this._colorIndex++ % PLAYER_COLORS.length];
@@ -58,7 +59,7 @@ class GameRoom {
     });
   }
 
-  configure({ questions, totalRounds, usingCustomQuestions, timeLimit }) {
+  configure({ questions, totalRounds, usingCustomQuestions, timeLimit, roundTypes }) {
     if (this.state !== 'lobby') return { error: 'Cannot configure after game has started' };
 
     if (typeof usingCustomQuestions === 'boolean') {
@@ -78,6 +79,13 @@ class GameRoom {
 
     if (typeof timeLimit === 'number' && !isNaN(timeLimit)) {
       this.timeLimit = Math.max(5000, Math.min(60000, timeLimit));
+    }
+
+    if (typeof roundTypes === 'object' && roundTypes !== null) {
+      this.roundTypes = {
+        speedRound: roundTypes.speedRound === true,
+        debateRound: roundTypes.debateRound === true
+      };
     }
 
     // Reset all profiles since questions may have changed
