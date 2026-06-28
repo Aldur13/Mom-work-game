@@ -50,8 +50,7 @@ export default function QuestionScreen({ questionData, isSubject, mySubjectAnswe
         </div>
 
         <div className="spotlight-card">
-          <div className="spotlight-emoji">🌟</div>
-          <h2>You're in the spotlight!</h2>
+          <h2>You're in the spotlight</h2>
           <p style={{ color: 'var(--text-dim)', marginTop: '6px', fontSize: '0.9rem' }}>
             {isPlayerGuess
               ? 'Your crew is guessing which answer is yours!'

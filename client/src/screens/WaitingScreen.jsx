@@ -66,7 +66,7 @@ export default function WaitingScreen({ roomCode, players, readyCount, isHost, g
             </p>
           )}
           <button className="btn btn-success" onClick={handleStart} disabled={!canStart}>
-            {allReady ? '🚀 Start Game!' : 'Waiting for everyone...'}
+            {allReady ? 'Start Game' : 'Waiting for everyone...'}
           </button>
         </div>
       ) : (

@@ -15,9 +15,8 @@ export default function FinalScreen({ finalScores, myId }) {
   return (
     <div className="screen" style={{ alignItems: 'center' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '3rem' }}>🎉</div>
-        <h2 style={{ fontSize: '2rem', marginTop: '8px' }}>Game Over!</h2>
-        {myRank === 1 && <p style={{ color: 'var(--accent)', fontWeight: 700, marginTop: '6px' }}>You won! 🏆</p>}
+        <h2 style={{ fontSize: '2rem' }}>Game Over</h2>
+        {myRank === 1 && <p style={{ color: 'var(--accent)', fontWeight: 700, marginTop: '6px' }}>You won!</p>}
         {myRank > 1 && <p style={{ color: 'var(--text-dim)', marginTop: '6px' }}>You finished #{myRank}</p>}
       </div>
 

@@ -25,7 +25,7 @@ export default function HomeScreen({ error, onClearError }) {
     <div className="screen" style={{ justifyContent: 'center', paddingTop: '60px' }}>
       <div className="center">
         <div className="game-title">Know Your Crew</div>
-        <p className="subtitle" style={{ marginTop: '8px' }}>The social game for people who think they know each other 👀</p>
+        <p className="subtitle" style={{ marginTop: '8px' }}>The social game for people who think they know each other</p>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
@@ -46,7 +46,7 @@ export default function HomeScreen({ error, onClearError }) {
         {!mode && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
             <button className="btn btn-primary" onClick={() => setMode('create')} disabled={!trimmedName}>
-              🎉 Create a Room
+              Create a Room
             </button>
             <div className="divider">or</div>
             <button className="btn btn-ghost" onClick={() => setMode('join')} disabled={!trimmedName}>

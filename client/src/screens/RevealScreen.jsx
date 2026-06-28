@@ -22,9 +22,8 @@ export default function RevealScreen({ revealData, isHost, myId }) {
 
       {isMySubject ? (
         <div className="my-result subject">
-          <span className="result-icon">🌟</span>
           <div>
-            <div>You were in the spotlight!</div>
+            <div>You were in the spotlight</div>
             {subjectBonus > 0 && (
               <div style={{ fontSize: '0.9rem', marginTop: '2px' }}>
                 +{subjectBonus} pts ({wrongGuesses} wrong guess{wrongGuesses !== 1 ? 'es' : ''})
