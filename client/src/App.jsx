@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import socket from './socket';
 import DEFAULT_QUESTIONS from './questions';
 import HomeScreen from './screens/HomeScreen';
@@ -6,8 +6,9 @@ import HostSetupScreen from './screens/HostSetupScreen';
 import ProfileSetup from './screens/ProfileSetup';
 import WaitingScreen from './screens/WaitingScreen';
 import QuestionScreen from './screens/QuestionScreen';
-import RevealScreen from './screens/RevealScreen';
-import FinalScreen from './screens/FinalScreen';
+
+const RevealScreen = lazy(() => import('./screens/RevealScreen'));
+const FinalScreen = lazy(() => import('./screens/FinalScreen'));
 
 export default function App() {
   const [screen, setScreen] = useState('home');
@@ -149,12 +150,18 @@ export default function App() {
     />
   );
   if (screen === 'reveal') return (
-    <RevealScreen
-      revealData={revealData}
-      isHost={isHost}
-      myId={myId}
-    />
+    <Suspense fallback={<div className="screen" style={{ textAlign: 'center' }}><p className="waiting-text">Loading results...</p></div>}>
+      <RevealScreen
+        revealData={revealData}
+        isHost={isHost}
+        myId={myId}
+      />
+    </Suspense>
   );
-  if (screen === 'final') return <FinalScreen finalScores={finalScores} myId={myId} />;
+  if (screen === 'final') return (
+    <Suspense fallback={<div className="screen" style={{ textAlign: 'center' }}><p className="waiting-text">Loading final scores...</p></div>}>
+      <FinalScreen finalScores={finalScores} myId={myId} />
+    </Suspense>
+  );
   return null;
 }
