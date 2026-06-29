@@ -219,6 +219,80 @@ io.on('connection', (socket) => {
     socket.emit('joined-room', { code, isHost: socket.id === room.hostId, questions: room.questions, totalRounds: room.totalRounds });
     io.to(code).emit('room-update', room.getRoomUpdate());
   });
+
+  socket.on('kick-player', ({ targetSocketId }) => {
+    const code = socketToRoom.get(socket.id);
+    const room = rooms.get(code);
+    if (!room || socket.id !== room.hostId) return;
+    if (!targetSocketId || targetSocketId === socket.id) return;
+
+    room.removePlayer(targetSocketId);
+    socketToRoom.delete(targetSocketId);
+
+    const targetSocket = io.sockets.sockets.get(targetSocketId);
+    if (targetSocket) {
+      targetSocket.emit('kicked', { message: 'You have been removed from the game by the host.' });
+      targetSocket.leave(code);
+    }
+
+    io.to(code).emit('room-update', room.getRoomUpdate());
+
+    if (room.players.size === 0) {
+      deleteRoom(code);
+    }
+  });
+
+  socket.on('force-start-game', () => {
+    const code = socketToRoom.get(socket.id);
+    const room = rooms.get(code);
+    if (!room || socket.id !== room.hostId) return;
+    if (room.players.size < 3) { socket.emit('game-error', { message: 'Need at least 3 players to start.' }); return; }
+
+    const result = room.startGame();
+    if (result.error) { socket.emit('game-error', { message: result.error }); return; }
+    io.to(code).emit('game-started');
+    sendNextQuestion(room, code);
+  });
+
+  socket.on('force-reveal', () => {
+    const code = socketToRoom.get(socket.id);
+    const room = rooms.get(code);
+    if (!room || socket.id !== room.hostId) return;
+    if (room.state !== 'playing' || !room.currentRound) return;
+
+    clearTimeout(revealTimers.get(code));
+    revealTimers.delete(code);
+    triggerReveal(room, code);
+  });
+
+  socket.on('add-points', ({ targetSocketId, amount }) => {
+    const code = socketToRoom.get(socket.id);
+    const room = rooms.get(code);
+    if (!room || socket.id !== room.hostId) return;
+    if (!targetSocketId || typeof amount !== 'number' || amount === 0) return;
+
+    const player = room.players.get(targetSocketId);
+    if (!player) return;
+
+    player.score += amount;
+    io.to(code).emit('room-update', room.getRoomUpdate());
+  });
+
+  socket.on('add-streak', ({ targetSocketId, amount }) => {
+    const code = socketToRoom.get(socket.id);
+    const room = rooms.get(code);
+    if (!room || socket.id !== room.hostId) return;
+    if (!targetSocketId || typeof amount !== 'number' || amount === 0) return;
+
+    const player = room.players.get(targetSocketId);
+    if (!player) return;
+
+    player.streak += amount;
+    if (player.streak > player.maxStreak) {
+      player.maxStreak = player.streak;
+    }
+    io.to(code).emit('room-update', room.getRoomUpdate());
+  });
 });
 
 function sendNextQuestion(room, code) {

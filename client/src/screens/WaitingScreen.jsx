@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import socket from '../socket';
-import { Check, Users, Copy } from 'lucide-react';
+import { Check, Users, Copy, X, ChevronDown, ChevronUp, Zap } from 'lucide-react';
 
 export default function WaitingScreen({ roomCode, players, readyCount, isHost, gameError, onClearError }) {
   const [copied, setCopied] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const total = players.length;
   const minPlayers = 3;
   const allReady = readyCount === total && total >= minPlayers;
@@ -19,6 +20,23 @@ export default function WaitingScreen({ roomCode, players, readyCount, isHost, g
   const handleStart = () => {
     onClearError();
     socket.emit('start-game');
+  };
+
+  const handleKick = (socketId) => {
+    socket.emit('kick-player', { targetSocketId: socketId });
+  };
+
+  const handleForceStart = () => {
+    onClearError();
+    socket.emit('force-start-game');
+  };
+
+  const handleAddPoints = (socketId, amount) => {
+    socket.emit('add-points', { targetSocketId: socketId, amount });
+  };
+
+  const handleAddStreak = (socketId, amount) => {
+    socket.emit('add-streak', { targetSocketId: socketId, amount });
   };
 
   return (
@@ -57,7 +75,7 @@ export default function WaitingScreen({ roomCode, players, readyCount, isHost, g
             <div className="skeleton skeleton-row" style={{ opacity: 0.45 }} />
           </>
         ) : players.map(p => (
-          <div key={p.id} className="player-row">
+          <div key={p.id} className="player-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div className="player-avatar" style={{ background: p.color || 'var(--primary)', fontSize: '1.4rem' }}>
               {p.avatar || p.name[0].toUpperCase()}
             </div>
@@ -66,6 +84,16 @@ export default function WaitingScreen({ roomCode, players, readyCount, isHost, g
             <span className={`player-badge ${p.profileReady ? 'ready' : ''}`}>
               {p.profileReady ? <><Check size={11} /> Ready</> : 'Filling in...'}
             </span>
+            {isHost && !p.isHost && (
+              <button
+                className="btn btn-ghost"
+                onClick={() => handleKick(p.id)}
+                style={{ marginLeft: 'auto', padding: '4px 8px', minWidth: 'auto' }}
+                title="Remove player"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -84,6 +112,94 @@ export default function WaitingScreen({ roomCode, players, readyCount, isHost, g
           <button className="btn btn-success" onClick={handleStart} disabled={!canStart}>
             {allReady ? 'Start Game' : 'Waiting for everyone...'}
           </button>
+
+          {/* Admin Panel Toggle */}
+          <button
+            className="btn btn-ghost"
+            onClick={() => setShowAdminPanel(!showAdminPanel)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center', fontSize: '0.9rem' }}
+          >
+            {showAdminPanel ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            Admin Console
+          </button>
+
+          {/* Admin Panel */}
+          {showAdminPanel && (
+            <div style={{
+              background: 'rgba(255, 107, 53, 0.1)',
+              border: '1px solid rgba(255, 107, 53, 0.3)',
+              borderRadius: '8px',
+              padding: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-dim)', fontWeight: 600 }}>Admin Commands</div>
+              <button
+                className="btn btn-primary"
+                onClick={handleForceStart}
+                disabled={total < minPlayers}
+                style={{ fontSize: '0.9rem', gap: '6px' }}
+              >
+                <Zap size={14} /> Force Start ({total} players)
+              </button>
+              {total < minPlayers && (
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', margin: 0 }}>
+                  Need at least {minPlayers} players to start
+                </p>
+              )}
+
+              {/* Player Adjustments */}
+              {total > 0 && (
+                <div style={{ borderTop: '1px solid rgba(255, 107, 53, 0.2)', paddingTop: '8px' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', fontWeight: 600, marginBottom: '8px' }}>Adjust Player Stats</div>
+                  {players.map(p => (
+                    <div key={p.id} style={{
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      borderRadius: '6px',
+                      padding: '8px',
+                      marginBottom: '8px',
+                      fontSize: '0.85rem'
+                    }}>
+                      <div style={{ fontWeight: 600, marginBottom: '6px' }}>{p.name}</div>
+                      <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                        <button
+                          className="btn btn-ghost"
+                          onClick={() => handleAddPoints(p.id, 50)}
+                          style={{ padding: '4px 8px', fontSize: '0.75rem', flex: 1 }}
+                        >
+                          +50 pts
+                        </button>
+                        <button
+                          className="btn btn-ghost"
+                          onClick={() => handleAddPoints(p.id, -50)}
+                          style={{ padding: '4px 8px', fontSize: '0.75rem', flex: 1 }}
+                        >
+                          -50 pts
+                        </button>
+                      </div>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          className="btn btn-ghost"
+                          onClick={() => handleAddStreak(p.id, 1)}
+                          style={{ padding: '4px 8px', fontSize: '0.75rem', flex: 1 }}
+                        >
+                          +1 streak
+                        </button>
+                        <button
+                          className="btn btn-ghost"
+                          onClick={() => handleAddStreak(p.id, -1)}
+                          style={{ padding: '4px 8px', fontSize: '0.75rem', flex: 1 }}
+                        >
+                          -1 streak
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ) : (
         <p className="waiting-text">

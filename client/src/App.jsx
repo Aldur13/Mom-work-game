@@ -127,6 +127,11 @@ export default function App() {
 
     socket.on('join-error', ({ message }) => setError(message));
     socket.on('game-error', ({ message }) => setGameError(message));
+    socket.on('kicked', ({ message }) => {
+      setError(message);
+      setScreen('home');
+      localStorage.removeItem('gameSession');
+    });
 
     return () => {
       socket.off('connect');
@@ -143,6 +148,7 @@ export default function App() {
       socket.off('game-over');
       socket.off('join-error');
       socket.off('game-error');
+      socket.off('kicked');
     };
   }, []);
 
@@ -243,6 +249,7 @@ export default function App() {
         isSubject={isSubject}
         mySubjectAnswer={mySubjectAnswer}
         guessCount={guessCount}
+        isHost={isHost}
       />
     </div>
   );

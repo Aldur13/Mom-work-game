@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import socket from '../socket';
 import { playLock } from '../utils/sounds';
+import { ZapOff } from 'lucide-react';
 
 const SLOT_COLORS = ['#e91e8c', '#00d4aa', '#7c4dff', '#ff6b35'];
 
-export default function QuestionScreen({ questionData, isSubject, mySubjectAnswer, guessCount }) {
+export default function QuestionScreen({ questionData, isSubject, mySubjectAnswer, guessCount, isHost }) {
   const [selected, setSelected] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [timeLeft, setTimeLeft] = useState(questionData.timeLimit / 1000);
@@ -34,6 +35,10 @@ export default function QuestionScreen({ questionData, isSubject, mySubjectAnswe
     clearInterval(intervalRef.current);
     playLock();
     socket.emit('submit-guess', { optionId });
+  };
+
+  const handleForceReveal = () => {
+    socket.emit('force-reveal');
   };
 
   const pct = (timeLeft / (questionData.timeLimit / 1000)) * 100;
@@ -83,6 +88,16 @@ export default function QuestionScreen({ questionData, isSubject, mySubjectAnswe
         <div style={{ textAlign: 'center', color: timerColor, fontWeight: 700, marginTop: 'auto' }}>
           {Math.ceil(timeLeft)}s remaining
         </div>
+
+        {isHost && (
+          <button
+            className="btn btn-ghost"
+            onClick={handleForceReveal}
+            style={{ marginTop: '10px', fontSize: '0.85rem', gap: '6px' }}
+          >
+            <ZapOff size={14} /> Skip to Reveal
+          </button>
+        )}
       </div>
     );
   }
