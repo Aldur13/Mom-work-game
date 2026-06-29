@@ -28,6 +28,17 @@ function shuffle(arr) {
   return a;
 }
 
+function normalizeAnswer(answer) {
+  if (!answer) return '';
+  const trimmed = answer.trim().toLowerCase();
+  const numberWords = { 'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9' };
+  const numMatch = trimmed.match(/^[a-z\s]+$/);
+  if (numMatch && numberWords[trimmed]) {
+    return numberWords[trimmed];
+  }
+  return trimmed;
+}
+
 class GameRoom {
   constructor(hostId, hostName) {
     this.code = generateCode();
@@ -38,7 +49,7 @@ class GameRoom {
     this.currentRoundIndex = 0;
     this.currentRound = null;
     this.lastActivity = Date.now();
-    this.questions = [...DEFAULT_QUESTIONS];
+    this.questions = shuffle([...DEFAULT_QUESTIONS]).slice(0, 10);
     this.totalRounds = DEFAULT_TOTAL_ROUNDS;
     this.timeLimit = DEFAULT_TIME_LIMIT;
     this.usingCustomQuestions = false;
@@ -69,13 +80,13 @@ class GameRoom {
     let questionsChanged = false;
     if (Array.isArray(questions)) {
       const cleaned = questions.map(q => (typeof q === 'string' ? q.trim().slice(0, 100) : '')).filter(Boolean);
-      const newQuestions = cleaned.length > 0 ? cleaned : [...DEFAULT_QUESTIONS];
+      const newQuestions = cleaned.length > 0 ? cleaned : shuffle([...DEFAULT_QUESTIONS]).slice(0, 10);
       if (JSON.stringify(newQuestions) !== JSON.stringify(this.questions)) {
         this.questions = newQuestions;
         questionsChanged = true;
       }
     } else if (!this.usingCustomQuestions) {
-      const defaults = [...DEFAULT_QUESTIONS];
+      const defaults = shuffle([...DEFAULT_QUESTIONS]).slice(0, 10);
       if (JSON.stringify(defaults) !== JSON.stringify(this.questions)) {
         this.questions = defaults;
         questionsChanged = true;
@@ -242,21 +253,30 @@ class GameRoom {
 
     // answer-guess: pick which answer belongs to the subject
     const distractors = [];
+    const normalizedCorrect = normalizeAnswer(correctAnswer);
     for (const [id, player] of this.players) {
       if (id !== subjectId && player.answers) {
         const ans = (player.answers[`q${questionIndex}`] || '').trim();
-        if (ans && ans.toLowerCase() !== correctAnswer.toLowerCase()) {
+        if (ans && normalizeAnswer(ans) !== normalizedCorrect) {
           distractors.push(ans);
         }
       }
     }
 
-    let uniqueDistractors = shuffle([...new Set(distractors)]).slice(0, 3);
+    const uniqueAnswers = new Map();
+    for (const ans of distractors) {
+      const normalized = normalizeAnswer(ans);
+      if (!uniqueAnswers.has(normalized)) {
+        uniqueAnswers.set(normalized, ans);
+      }
+    }
+    let uniqueDistractors = shuffle([...uniqueAnswers.values()]).slice(0, 3);
 
     // Pad with pre-seeded defaults if not enough player distractors
     if (uniqueDistractors.length < 3 && !this.usingCustomQuestions) {
+      const usedNormalized = new Set([normalizedCorrect, ...uniqueDistractors.map(normalizeAnswer)]);
       const defaults = (DEFAULT_ANSWERS[questionIndex] || [])
-        .filter(d => d.toLowerCase() !== correctAnswer.toLowerCase() && !uniqueDistractors.map(x => x.toLowerCase()).includes(d.toLowerCase()));
+        .filter(d => !usedNormalized.has(normalizeAnswer(d)));
       const needed = 3 - uniqueDistractors.length;
       uniqueDistractors = [...uniqueDistractors, ...shuffle(defaults).slice(0, needed)];
     }
